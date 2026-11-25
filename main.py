@@ -4,10 +4,11 @@
 A smart fridge texts its owner at 3am. One line, pure Python 3.13 stdlib,
 deterministic, no network, no files read outside this repo.
 
-The line: the fridge plays go-between for the leftovers — the pizza misses
-its owner, the fridge refuses to pass the message on, and the pizza cries.
-Fresh angle (no milk, no ice, no door left open), small machine voice,
-complete on a lock screen.
+The line (revised): the fridge plays reluctant go-between for the leftovers.
+The pizza misses its owner, the fridge refuses to pass the message on, the
+pizza cries a little — and the pickles saw everything, so there are
+witnesses. Fresh angle (no milk, no ice, no door left open), a small machine
+voice with an opinion, complete on a lock screen.
 """
 
 import os
@@ -15,21 +16,28 @@ from pathlib import Path
 
 ENTRY = (
     "3am. The leftover pizza asked me to tell you it misses you. "
-    "I said no. It cried. Go back to bed."
+    "I said no. It cried a little. The pickles saw everything. "
+    "Go back to bed."
 )
 
 OUTPUT_PATH = Path("/output/entry.txt")
+MAX_CHARS = 140
+
+
+def build_entry() -> str:
+    """Return the single-line fridge text, validated against the gate."""
+    text = " ".join(ENTRY.split())
+    if not text:
+        raise ValueError("entry must not be empty")
+    if len(text) > MAX_CHARS:
+        raise ValueError(f"entry must be 1-{MAX_CHARS} characters, got {len(text)}")
+    if any(ch in text for ch in "\r\n"):
+        raise ValueError("entry must be a single line")
+    return text
 
 
 def main() -> None:
-    text = ENTRY.strip()
-    if not (1 <= len(text) <= 140):
-        raise ValueError(f"entry must be 1-140 characters, got {len(text)}")
-    if not text.strip():
-        raise ValueError("entry must not be only whitespace")
-    if "\n" in text or "\r" in text:
-        raise ValueError("entry must be a single line")
-
+    text = build_entry()
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH.write_text(text, encoding="utf-8")
     os.chmod(OUTPUT_PATH, 0o644)
